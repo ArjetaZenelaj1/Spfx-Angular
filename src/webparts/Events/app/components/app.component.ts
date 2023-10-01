@@ -1,102 +1,162 @@
-import { Component, OnInit } from '@angular/core';
-import { IWebPartContext } from '@microsoft/sp-webpart-base';
-import styles from '../../EventsWebPart.module.scss';
-import { DataService } from '../services/data.service';
-import { IEvent } from '../models/events.model';
-import { sp, List, ListEnsureResult, ItemUpdateResult, ItemAddResult, FieldAddResult } from "@pnp/sp";
+import { Component, OnInit } from "@angular/core";
+import { IWebPartContext } from "@microsoft/sp-webpart-base";
+import styles from "../../EventsWebPart.module.scss";
+import { DataService } from "../services/data.service";
+import { IEvent } from "../models/events.model";
+import {
+  sp,
+  List,
+  ListEnsureResult,
+  ItemUpdateResult,
+  ItemAddResult,
+  FieldAddResult,
+} from "@pnp/sp";
+import { FormBuilder, FormGroup } from "@angular/forms";
 
 @Component({
-  selector: 'spfx-app',
+  selector: "spfx-app",
   providers: [DataService],
   template: `<div class="${styles.events}">
-  <table class="${styles.table}">
+    <table class="${styles.table}">
       <tr>
-          <th> Test First Name</th>
-          <th>Last Name</th>
+        <th>Test First Name</th>
+        <th>Last Name</th>
       </tr>
       <tr>
-          <td><input type="text" id="txtFirstName1" [(ngModel)]="newAttendeeFirstName1" required/></td>
-          <td><input type="text" id="txtLastName" [(ngModel)]="newAttendeeLastName" required/></td>
+        <td>
+          <input
+            type="text"
+            id="txtFirstName1"
+            [(ngModel)]="newAttendeeFirstName1"
+            required
+          />
+        </td>
+        <td>
+          <input
+            type="text"
+            id="txtLastName"
+            [(ngModel)]="newAttendeeLastName"
+            required
+          />
+        </td>
       </tr>
       <tr>
         <th>Email</th>
         <th>Event Name</th>
       </tr>
       <tr>
-          <td><input type="text" id="txtEmail" [(ngModel)]="newAttendeeEmail" /></td>
-          <td>
-              <select name="" id="" [(ngModel)]="newAttendeeEventName">
-                  <option *ngFor="let eventName of eventNames">{{eventName}}</option>
-              </select>
-          </td>
-        </tr>
-        <tr>
-          <th>Total Attendees</th>
-          <th></th>
-        </tr>
-        <tr>
-          <td><input type="text" id="txtTotal" [(ngModel)]="newAttendeeTotal" /></td>
-          <td>
-              <input type="button" id="btnAddAttendee" value="Add" (click)="AddAttendee()">
-              <input type="button" id="btnUpdateAttendee" value="Update" (click)="UpdateAttendee()">
-          </td>
+        <td>
+          <input type="text" id="txtEmail" [(ngModel)]="newAttendeeEmail" />
+        </td>
+        <td>
+          <select name="" id="" [(ngModel)]="newAttendeeEventName">
+            <option *ngFor="let eventName of eventNames">
+              {{ eventName }}
+            </option>
+          </select>
+        </td>
       </tr>
-  </table>
-  <table class="${styles.table}">
-  <tr>
-      <th>First Name</th>
-      <th>Last Name</th>
-      <th>Email</th>
-      <th>Event Name</th>
-      <th>Total Attendees</th>
-      <th>Update</th>
-      <th>Delete</th>
-  </tr>
-  <tr *ngFor="let attendee of eventCollection">
-      <td>{{attendee.FirstName1}}</td>
-      <td>{{attendee.LastName}}</td>
-      <td>{{attendee.Email}}</td>
-      <td>{{attendee.EventName}}</td>
-      <td>{{attendee.TotalAttendees}}</td>
-      <td>
-          <input type="button" id="btnPrepUpdateAttendee" value="Update" (click)="PrepUpdateAttendee(attendee)">
-      </td>
-      <td>
-          <input type="button" id="btnDeleteAttendee" value="Delete" (click)="DeleteAttendee(attendee)">
-      </td>
-  </tr>
-</table>`
+      <tr>
+        <th>Total Attendees</th>
+        <th></th>
+      </tr>
+      <tr>
+        <td>
+          <input type="text" id="txtTotal" [(ngModel)]="newAttendeeTotal" />
+        </td>
+        <td>
+          <input
+            class="add-button"
+            type="button"
+            id="btnAddAttendee"
+            value="Add"
+            (click)="AddAttendee()"
+          />
+          <input
+            type="button"
+            id="btnUpdateAttendee"
+            value="Update"
+            (click)="UpdateAttendee()"
+          />
+        </td>
+      </tr>
+    </table>
+    <table class="${styles.table}">
+      <tr>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Email</th>
+        <th>Event Name</th>
+        <th>Total Attendees</th>
+        <th>Update</th>
+        <th>Delete</th>
+      </tr>
+      <tr *ngFor="let attendee of eventCollection">
+        <td>{{ attendee.FirstName1 }}</td>
+        <td>{{ attendee.LastName }}</td>
+        <td>{{ attendee.Email }}</td>
+        <td>{{ attendee.EventName }}</td>
+        <td>{{ attendee.TotalAttendees }}</td>
+        <td>
+          <input
+            type="button"
+            id="btnPrepUpdateAttendee"
+            value="Update"
+            (click)="PrepUpdateAttendee(attendee)"
+          />
+        </td>
+        <td>
+          <input
+            type="button"
+            id="btnDeleteAttendee"
+            value="Delete"
+            (click)="DeleteAttendee(attendee)"
+          />
+        </td>
+      </tr>
+    </table>
+  </div>`,
+  styles: [
+    `
+      th {
+        color: red;
+      }
+      .add-button {
+        background-color: purple;
+        color: white;
+      }
+    `,
+  ],
 })
 export class AppComponent implements OnInit {
-
   public context: IWebPartContext;
 
   public newEvent: IEvent = null;
   public eventCollection: IEvent[] = [];
   private eventNames: string[] = [];
-  public newAttendeeEventName: string = '';
-  public newAttendeeFirstName1: string = '';
-  public newAttendeeLastName: string = '';
-  public newAttendeeEmail: string = '';
+  public newAttendeeEventName: string = "";
+  public newAttendeeFirstName1: string = "";
+  public newAttendeeLastName: string = "";
+  public newAttendeeEmail: string = "";
   public newAttendeeTotal: number = 0;
-  public newEventName: string = '';
+  public newEventName: string = "";
   public newAttendeeID: number = 0;
+  attendeeForm: FormGroup;
 
-  constructor(private dataService: DataService) {
-  }
+  constructor(private dataService: DataService, private fb: FormBuilder) {}
 
   private LoadAttendees() {
     const that = this;
-    this.dataService.GetEventsAsync()
-      .then((events: IEvent[]): void => {
-        that.eventCollection = [];
-        that.eventCollection = events;
-      });
+    this.dataService.GetEventsAsync().then((events: IEvent[]): void => {
+      that.eventCollection = [];
+      that.eventCollection = events;
+    });
   }
 
   private LoadEventChoices() {
     const that = this;
-    this.dataService.GetEventChoicesAsync()
+    this.dataService
+      .GetEventChoicesAsync()
       .then((eventChoices: string[]): void => {
         that.eventNames = [];
         that.eventNames = eventChoices;
@@ -113,18 +173,17 @@ export class AppComponent implements OnInit {
       Email: that.newAttendeeEmail,
       Title: that.newAttendeeEventName,
       TotalAttendees: that.newAttendeeTotal,
-      EventName: that.newAttendeeEventName
+      EventName: that.newAttendeeEventName,
     };
 
     this.dataService.AddEventAsync(event).then((events: IEvent[]) => {
       that.LoadAttendees();
     });
 
-
-    that.newAttendeeFirstName1 = '';
-    that.newAttendeeLastName = '';
-    that.newAttendeeEmail = '';
-    that.newAttendeeEventName = '';
+    that.newAttendeeFirstName1 = "";
+    that.newAttendeeLastName = "";
+    that.newAttendeeEmail = "";
+    that.newAttendeeEventName = "";
     that.newAttendeeTotal = 0;
   }
 
@@ -147,7 +206,7 @@ export class AppComponent implements OnInit {
       Email: that.newAttendeeEmail,
       Title: that.newAttendeeEventName,
       TotalAttendees: that.newAttendeeTotal,
-      EventName: that.newAttendeeEventName
+      EventName: that.newAttendeeEventName,
     };
 
     this.dataService.UpdateEventAsync(attendee).then((events: IEvent[]) => {
@@ -155,10 +214,10 @@ export class AppComponent implements OnInit {
     });
 
     that.newAttendeeID = 0;
-    that.newAttendeeFirstName1 = '';
-    that.newAttendeeLastName = '';
-    that.newAttendeeEmail = '';
-    that.newAttendeeEventName = '';
+    that.newAttendeeFirstName1 = "";
+    that.newAttendeeLastName = "";
+    that.newAttendeeEmail = "";
+    that.newAttendeeEventName = "";
     that.newAttendeeTotal = 0;
   }
 
